@@ -1,13 +1,15 @@
-## ARCHITECTURAL SKETCH (Esboço de arquitetura)
+## Architectural Sketch (Esboço de arquitetura)
 
 O projeto conta com novas funcionalidades que incluem tanto abrir automaticamente o pdf relacionado a um arquivo de anotação, quanto a abrir um arquivo de anotação relacionado a um pdf.
 A classe a seguir pode ser tanto um arquivo pdf quanto um de anotação.
+
+Cada arquivo tem um nome e funções relacionadas. Primeiro o nome do arquivo aberto deve ser fornecido e setado na classe com seu setter (setName()), depois conforme o fluxo for criado, o arquivo será buscado no diretório atual através do método findFile(), e finalmente quando um arquivo válido for encontrado, ele deverá ser aberto através do método openFile().
 
 ### Classe
 
 <img src="images/fileClass.png" width=100% title="File Class"/>
 
-### fluxos
+### Fluxos
 
 Existem 3 fluxos possíveis:
 
