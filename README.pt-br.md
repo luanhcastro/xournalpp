@@ -315,17 +315,414 @@ page](https://github.com/xournalpp/xournalpp/releases).
 - Xournal ++ será entregue com um GTK corrigido. Caso contrário, a sensibilidade à pressão não funcionará no Mac
   [#569](https://github.com/xournalpp/xournalpp/issues/569).
 
-## Construindo
+# Construindo
 
-[Linux Build](readme/LinuxBuild.md)
+## Linux
 
-[Mac Build](readme/MacBuild.md)
+### Instalando as dependências
 
-[Windows Build](readme/WindowsBuild.md)
+Xournal++ é programado com c++17 e precisa de cabeçalho e de uma biblioteca de sistema de arquivos, seja STL ou o boost implementation. Portanto, é necessário instalar um compilador para implementar esses recursos. Recomenda-se g++-8 ou clang-9 ou versões mais recentes.
 
-[Android Build](https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile#getting-started)
+Se você souber de depedências melhores e mais precisas, por favor, crie um pull request (ou uma issue).
 
-[iOS Build](https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile#getting-started)
+Lua precisa de plugins, caso esses plugins não sejam encontrados, eles serão desabilitados.
+
+#### Gerador CMake
+
+As instruções de instalação não se referem a nenhuma ferramenta geradora específica (a não ser o CMake), porém eles requerem make, ninja ou qualquer outro gerador CMake. É necessário ter instalado tal ferramenta para dar continuidade na instalação do xournalapp.
+
+A versão mínima do CMake necessária é a versão 3.10, mas é mais recomendado utilizar da versão 3.15 para cima.
+
+#### Comandos específicos para cada distribuição
+
+**Arch:**
+```bash
+sudo pacman -S cmake gtk3 base-devel libxml2 cppunit portaudio libsndfile \
+poppler-glib texlive-bin texlive-pictures gettext libzip lua53 lua53-lgi
+```
+
+**Fedora/ CentOS/ RHEL:**
+```bash
+sudo dnf install gcc-c++ cmake gtk3-devel libxml2-devel cppunit-devel portaudio-devel libsndfile-devel \
+poppler-glib-devel texlive-scheme-basic texlive-dvipng 'tex(standalone.cls)' gettext libzip-devel \
+librsvg2-devel lua-devel lua-lgi
+```
+
+**Ubuntu/ Debian e Raspberry Pi OS:**
+```bash
+sudo apt-get install cmake libgtk-3-dev libpoppler-glib-dev portaudio19-dev libsndfile-dev \
+libcppunit-dev dvipng texlive libxml2-dev liblua5.3-dev libzip-dev librsvg2-dev gettext lua-lgi
+```
+
+**openSUSE:**
+```bash
+sudo zypper install cmake gtk3-devel cppunit-devel portaudio-devel libsndfile-devel \
+texlive-dvipng texlive libxml2-devel libpoppler-glib-devel libzip-devel librsvg-devel lua-lgi
+```
+
+**Solus:**
+```bash
+sudo eopkg it -c system.devel
+
+sudo eopkg it cmake libgtk-3-devel libxml2-devel poppler-devel libzip-devel \
+portaudio-devel libsndfile-devel alsa-lib-devel cppunit-devel lua-devel \
+librsvg-devel gettext
+```
+
+### Compilando
+
+Os passos para compilar Xournal++ são bem simples:
+
+```bash
+git clone http://github.com/xournalpp/xournalpp.git
+cd xournalpp
+mkdir build
+cd build
+cmake ..
+cmake --build .
+# For a faster build, set the flag -DCMAKE_BUILD_TYPE=RelWithDebInfo
+```
+Para configurar a compilação graficamente, use ```cmake-gui ..```
+
+Com Cairo 1.16 PDF, é possível fazer anotações (bookmarks), mas esta versão não está sempre disponível, portanto ao exportar um arquivo como PDF pelo Cairo, ele é exportado sem as anotações realizadas.
+
+O executável binário estará no subdiretório ```build/src/```.
+
+### Packaging e instalação
+
+#### Criando pacotes para os gestores de pacotes 
+
+Primeiramente, certifique-se de que o destino das traduções tenha sido construído antes de tentar gerar qualquer outro pacote.
+```bash
+cmake --build . --target translations
+```
+
+Após a compilação, selecione quais pacotes você deseja gerar (veja as seções mais relevantes abaixo) e então execute o comando para gerar o pacote. Os pacotes gerados estarão localizados em ```build/packages```. Exemplo dos comandos:
+```bash
+cmake .. -DCPACK_GENERATOR="TGZ;DEB"  # Generate .tar.gz and .deb packages
+cmake --build . --target package
+```
+
+Por padrão, o pacote ```.tar.gz``` será gerado. Para outros distritos, como AppImages e Flatpaks, veja a seção abaixo.
+
+**Pacotes .deb**
+```bash
+cmake .. -DCPACK_GENERATOR="DEB" ..
+cmake --build . --target package
+```
+
+**Pacotes .rpm**
+TODO
+
+**AppImage**
+
+A forma mais rápida para gerar o AppImage, é primeiro gerar o pacote ```.tar.gz``` e depois usá-lo com o script ```azure-pipelines/util/build_appimage.sh```.
+
+```bash
+cmake .. -DCPACK_GENERATOR="TGZ"
+cmake --build . --target package
+../azure-pipelines/util/build_appimage.sh
+```
+
+O script ```build_appimage.sh``` fará o download, automaticamente, de LinuxDeploy. Basta copiar os arquivos ```.tar.gz``` e as bibliotecas e recursos necessários para o diretório ```appimage_staging``` e executar LinuxDeploy no diretório preparado.
+
+Automaticamente, o ```build_appimage.sh``` fará uma cópia do tema Adwaita GTK e o do ícone Adwaita de AppImage.
+
+**Flatpak**
+
+A patente de Xournal++ está localizado em [https://github.com/flathub/com.github.xournalpp.xournalpp], e deve ser clonado em um diretório separado antes das contruções.
+```bash
+git clone https://github.com/flathub/com.github.xournalpp.xournalpp xournalpp-flatpak
+```
+
+Por padrão, a patente do Flatpak fará o download da versão atual mais estável do Xournal++. Você poderá mudar a versão para a versão desejada editando o *commit* da patente. Também é interessante especificar a *tag*, se você estiver fazendo a alteração para uma versão estável.
+```bash
+ - name: xournalpp
+     buildsystem: cmake-ninja
+     sources:
+       - type: git
+         url: https://github.com/xournalpp/xournalpp
+-        commit: 14e9012b94e005112387dbb7d2ed59274d542885
+-        tag: 1.0.10
++        commit: a911a3911df7c588c23997a29ad6a2e8d48b4aea
++        tag: 1.0.15
+```
+
+Também é possível construir o clone do Xournal++ alterando o tipo para ```dir``` e especificando o caminho para o clone.
+
+#### Instação a partir da origem
+
+**Nós, fortemente, NÃO recomendamos fazer a instação a partir da origem**, pois pode levar a problemas quando for necessária atualizações para novas versões. Ao invés disso, pense em criar um pacote nativo, como AppImage ou Fratpak. As instruções estão a cima.
+
+Caso você realmente não queira criar um pacote, é possível instalar o Xournal++ na sua pasta de usuário apenas especificando ```CMAKE_INSTALL_PREFIX```:
+
+```bash
+cmake .. -DCMAKE_INSTALL_PREFIX=$HOME/.local
+cmake --build . --target install
+./cmake/postinst configure
+```
+
+Se você desejar fazer o download do Xournal++ pelo âmbito do sistema diretamente pela contrução de diretório, utilize o seguinte comando:
+```bash
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+sudo cmake --build . --target install
+./cmake/postinst configure
+```
+
+
+## MacOS .app
+
+Não instale macports ou homebrew. Caso você já tenha instalado, será necessário criar outro user e usá-lo para esse processo. jhbuild também não funcionará.
+
+Uma possível forma de utilizar o jhbuild juntamente com o brew é se você desatar todos os módulos do brew antes de executar o jhbuild. Depois de finalizado a construção, eles podem ser atados novamente. Mas esse método não foi testado, então existe a possibilidade de não dar certo.
+
+### Certifique-se de que o ambiente de desenvolvimento foi instalado
+
+Abra o terminal e digite ```git```, confirme o pop-up da AppleStore clicando em 'Instalar', nas ferramentas de desenvolvimento.
+
+### Construa as bibliotecas (só é necessário realizar uma única vez)
+
+Antes de seguir os próximos passos, resolva todos os problemas pendentes com a atual versão do seu SO. Os erros irão variar de acordo com a versão das bibliotecas. Se você se deparar com um erro desconhecido, sinta-se a vontade em adicioná-lo nesta seção de instruções.
+
+#### 1. Contruindo GTK
+
+```bash
+./build-gtk3.sh
+```
+
+**Erros mais comuns**
+
+*itstool (version 2.0.6 on macOS High Sierra 10.13)*
+
+itstool pode falhar ao tentar realizar a configuração procurando por uma ligação com libxml2 python.
+Siga os passos abaixo para resolver o problema:
+    1. Abra o shell com a opção 4
+    2. Altere a versão do Python para a versão 2.7, usando: ```export PYTHON=/usr/bin/python2.7```
+    3. Execute a etapa de configuração manualmente, usando: ```./configure --prefix $HOME/gtk/inst``
+    4. Saia do shell com ```exit```
+    5. Continue a construção com a opção 2
+
+*expat (macOS Mojave 10.14)*
+
+O construtor pode se deparar com o seguinte erro:
+```bash
+configure: error: C compiler cannot create executables
+```
+
+Siga os passos abaixo para resolver o problema:
+    1. Abra o shell com a opção 4
+    2. Execute a etapa de configuração manualmente, usando: ```./configure --prefix $HOME/gtk/inst```
+    3. Saia do shell com ```exit```
+    4. Continue a construção com a opção 2
+
+#### 2. Inicie o jhbuild shell
+
+```bash
+$HOME/.new_local/bin/jhbuild shell
+```
+
+#### 3. Construa o Poppler
+
+Execute o seguinte comando no diretório:
+
+```bash
+./build-poppler.sh
+```
+
+#### 4. Construa PortAudio
+
+```bash
+./build-portaudio.sh
+```
+
+#### 5. Construa LibZip
+
+```bash
+./build-libzip.sh
+```
+
+**Erros comuns**
+
+*Unknown module (macOS Mojave 10.14)*
+
+Caso houver um erro como o a seguir:
+
+```bash
+xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory '/Library/Developer/CommandLineTools' is a command line tools instance
+```
+
+Siga os passos abaixo para resolver o problema:
+    1. Instale Xcode () se você ainda não o possuir
+    2. Aceite os termos e condições
+    3. Certifique-se de  que o aplicativo Xcode está em /Application e **não** em /Users/{user}/Applications
+    4. Direcione o xcode-select para o diretório de desenvolvimento do aplicativo Xcode, usando o seguinte comando:
+      4.1 ```sudo xcode-select -s /Applications/Xcode.app/Contents/Developer```
+    5. Certifique-se de qe o caminho do Xcode está correto:
+      i) Xcode: */Applications/Xcode.app/Contents/Developer*
+      ii) Xcode-beta: */Applications/Xcode-beta.app/Contents/Developer*
+
+#### 6. Construa sndfile
+
+**Gravar e escutar áudios ainda não são é suportado pelo MacOS.**
+```bash
+./build-sndfile.sh
+```
+
+#### 7. Construa ícone adwaita 
+
+```bash
+jhbuild build adwaita-icon-theme
+```
+
+### Construa o Xournal++ e pacotes como .app
+
+**Passo automatizado**
+
+```bash
+./complete-build.sh $HOME/gtk
+```
+
+**Passos manuais**
+
+Construa Xournal++
+
+```bash
+export PATH="$HOME/.local/bin:$HOME/gtk/inst/bin:$PATH"
+
+cmake -DCMAKE_INSTALL_PREFIX:PATH=$HOME/gtk/inst ..
+make -j 4
+make install
+```
+
+Construa App
+
+```bash
+./build-app.sh $HOME/gtk
+```
+
+## Construindo Xournal++ para Mac Homebrew
+
+**Nós, oficialmente, não damos suporte às construçĩes com Homebrew. Eles existem por completa conveniência.**
+
+É fortemente recomendado que se use ou o lançamento oficial ou o noturno. 
+
+### Instalando Homebrew
+
+[https://brew.sh/]
+
+```bash
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+### Instalando as dependências
+
+```bash
+brew install cmake pkg-config gtk+3 poppler librsvg adwaita-icon-theme libzip portaudio libsndfile
+```
+
+### Construindo Xournal++
+
+```bash
+git clone http://github.com/xournalpp/xournalpp.git
+cd xournalpp
+mkdir build
+cd build
+cmake ..
+make
+```
+
+
+## Windows
+
+### Preparação
+
+  1. Instale [MSYS2] em um caminho curto e sem espaços
+  2. Instale [NSIS] no diretório padrão
+  3. Inicie Mingw-w64 64bit. (Esteja sempre atento se está **MINGW64** e não 32bit e/ou MSYS2)
+
+Isso abrirá um console. Todos os próximos passos serão descritos abaixo.
+
+### Faça Update de MSYS2
+
+Realize esta etapa múltiplas vezes. A cada vez que realizá-la, feche o terminal e abra-o novamente.
+```bash
+pacman -Syuu
+```
+
+### Instale GIT
+
+```bash
+pacman -S git
+```
+
+### Instale as ferramentas de construção
+
+```bash
+pacman -S mingw-w64-x86_64-toolchain \
+          mingw-w64-x86_64-cmake \
+          mingw-w64-x86_64-ninja \
+          patch \
+          mingw-w64-x86_64-cppunit \
+          make \
+          mingw-w64-x86_64-imagemagick
+```
+
+->Pressione enter multiplas vezes e confirme todos os valores padrões.
+
+### Instale as dependências
+
+```bash
+pacman -S mingw-w64-x86_64-poppler \
+          mingw-w64-x86_64-gtk3 \
+          mingw-w64-x86_64-libsndfile \
+          mingw-w64-x86_64-libzip \
+          mingw-w64-x86_64-lua
+```
+
+->Pressione enter multiplas vezes e confirme todos os valores padrões.
+
+### Tenha acesso às fontes
+
+```bash
+git clone https://github.com/xournalpp/xournalpp.git
+cd xournalpp/
+```
+
+### Instale sndfile / PortAudio
+
+```bash
+windows-setup/build-portaudio.sh
+```
+
+### Construa o Xournal++
+
+```bash
+mkdir build
+cd build/
+cmake ..
+cmake --build .
+```
+
+### Modifique a variável de ambiente do caminho (path)
+
+Adicione ```C:\msys64\mingw64\bin``` e ```C:\msys64\usr\bin``` para o topo da sua variável de ambiente de caminho nas configurações avançadas do sistema Windows (assume-se que o diretório padrão da instação seja MSYS2).
+
+Agora você pode executar/rodar o Xournal++ com o seguinte comando:
+
+```bash
+./src/xournalpp.exe
+```
+
+### Packaging e Setup
+
+Criei um instalador com o seguinte comando:
+
+```bash
+windows-setup/package.sh
+```
+
+O instalador estará localizado em ```windows-setup/xournalpp-setup.exe```. Esse comando também irá criar uma versão portátil do Xournal++, localizado em ```windows-setup/dist```.
+
 
 ## Formato de arquivo
 
