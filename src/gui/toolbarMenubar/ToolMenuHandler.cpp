@@ -331,6 +331,7 @@ void ToolMenuHandler::initToolItems() {
     // ************************************************************************
 
     addCustomItem("NEW", ACTION_NEW, "document-new", _("New Xournal"));
+    addCustomItem("OPEN AUTOMACTLY", ACTION_OPEN_AUTO, "document-openAuto", _("Find file"));
     addCustomItem("OPEN", ACTION_OPEN, "document-open", _("Open file"));
     addCustomItem("SAVE", ACTION_SAVE, "document-save", _("Save"));
     addStockItem("PRINT", ACTION_PRINT, "document-print", _("Print"));
