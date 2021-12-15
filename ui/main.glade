@@ -180,6 +180,18 @@
                           </object>
                         </child>
                         <child>
+                          <object class="GtkImageMenuItem" id="menuFileOpenAuto">
+                            <property name="label">Open Automactlly</property>
+                            <property name="name">menuFileOpenAuto</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="use-underline">True</property>
+                            <property name="use-stock">True</property>
+                            <signal name="activate" handler="ACTION_OPEN_AUTO" swapped="no"/>
+                            <accelerator key="a" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkMenuItem" id="menuFileRecent">
                             <property name="name">menuFileRecent</property>
                             <property name="visible">True</property>
