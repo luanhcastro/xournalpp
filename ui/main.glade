@@ -181,7 +181,7 @@
                         </child>
                         <child>
                           <object class="GtkImageMenuItem" id="menuFileOpenAuto">
-                            <property name="label">Open Automactlly</property>
+                            <property name="label">Open Automatically</property>
                             <property name="name">menuFileOpenAuto</property>
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
