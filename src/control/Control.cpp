@@ -366,6 +366,9 @@ void Control::actionPerformed(ActionType type, ActionGroup group, GdkEvent* even
             clearSelectionEndText();
             newFile();
             break;
+        case ACTION_OPEN_AUTO:
+            openFile();
+            break;
         case ACTION_OPEN:
             openFile();
             break;
