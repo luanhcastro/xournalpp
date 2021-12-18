@@ -2103,9 +2103,6 @@ auto Control::loadPdf(const fs::path& filepath, int scrollToPage) -> bool {
         nameSplitted = getFileName(f);
         pathSplitted = getPathName(f);
 
-        g_message("%s", nameSplitted.c_str());
-        g_message("%s", pathSplitted.c_str());
-
         for (const auto& file: directory_iterator(pathSplitted)) {
             if (file.path().extension() == ".xopp") {
 
@@ -2115,9 +2112,9 @@ auto Control::loadPdf(const fs::path& filepath, int scrollToPage) -> bool {
                 int lenght = pdfWithoutExt.length();
                 int blockDivision = lenght / 3;
 
-                string block1 = pdfWithoutExt.substr(0, blockDivision);
+                string block1 = pdfWithoutExt.substr(0, blockDivision - 1);
                 string block2 = pdfWithoutExt.substr(blockDivision, blockDivision * 2);
-                string block3 = pdfWithoutExt.substr(blockDivision * 2, lenght);
+                string block3 = pdfWithoutExt.substr(blockDivision * 2 + 1, lenght - 1);
 
                 if (strstr(pdfWithoutExt.c_str(), block1.c_str()) || strstr(pdfWithoutExt.c_str(), block2.c_str()) ||
                     strstr(pdfWithoutExt.c_str(), block3.c_str())) {
