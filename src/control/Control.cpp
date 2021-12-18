@@ -1,8 +1,12 @@
 #include "Control.h"
 
 #include <ctime>
+#include <filesystem>
+#include <iostream>
 #include <memory>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "gui/TextEditor.h"
 #include "gui/XournalView.h"
@@ -49,6 +53,12 @@
 #include "config-dev.h"
 #include "config.h"
 #include "i18n.h"
+
+using std::cin;
+using std::cout;
+using std::endl;
+using std::string;
+using std::filesystem::directory_iterator;
 
 using std::string;
 
@@ -365,9 +375,6 @@ void Control::actionPerformed(ActionType type, ActionGroup group, GdkEvent* even
         case ACTION_NEW:
             clearSelectionEndText();
             newFile();
-            break;
-        case ACTION_OPEN_AUTO:
-            openFile();
             break;
         case ACTION_OPEN:
             openFile();
@@ -2068,20 +2075,59 @@ auto Control::openFile(fs::path filepath, int scrollToPage, bool forceOpen) -> b
     return true;
 }
 
+string getNameWithoutExt(const std::string& str) {
+    std::size_t found = str.find_last_of(".");
+    return str.substr(0, found);
+}
+
+string getPathName(const std::string& str) {
+    std::size_t found = str.find_last_of("/\\");
+    return str.substr(0, found);
+}
+
+string getFileName(const std::string& str) {
+    std::size_t found = str.find_last_of("/\\");
+    return str.substr(found + 1);
+}
+
 auto Control::loadPdf(const fs::path& filepath, int scrollToPage) -> bool {
     LoadHandler loadHandler;
 
+    string nameSplitted;
+    string pathSplitted;
+
     if (settings->isAutoloadPdfXoj()) {
         Document* tmp;
-        const std::vector<std::string> exts = {".xopp", ".xoj", ".pdf.xopp", ".pdf.xoj"};
-        for (const std::string& ext: exts) {
-            fs::path f = filepath;
-            Util::clearExtensions(f, ".pdf");
-            f += ext;
-            tmp = loadHandler.loadDocument(f);
-            if (tmp)
-                break;
+
+        fs::path f = filepath;
+        nameSplitted = getFileName(f);
+        pathSplitted = getPathName(f);
+
+        g_message("%s", nameSplitted.c_str());
+        g_message("%s", pathSplitted.c_str());
+
+        for (const auto& file: directory_iterator(pathSplitted)) {
+            if (file.path().extension() == ".xopp") {
+
+                string nameWithoutExt = getNameWithoutExt(getFileName(file.path()));
+                string pdfWithoutExt = getNameWithoutExt(nameSplitted);
+
+                int lenght = pdfWithoutExt.length();
+                int blockDivision = lenght / 3;
+
+                string block1 = pdfWithoutExt.substr(0, blockDivision);
+                string block2 = pdfWithoutExt.substr(blockDivision, blockDivision * 2);
+                string block3 = pdfWithoutExt.substr(blockDivision * 2, lenght);
+
+                if (strstr(pdfWithoutExt.c_str(), block1.c_str()) || strstr(pdfWithoutExt.c_str(), block2.c_str()) ||
+                    strstr(pdfWithoutExt.c_str(), block3.c_str())) {
+                    tmp = loadHandler.loadDocument(file.path());
+                    if (tmp)
+                        break;
+                }
+            }
         }
+
         if (tmp) {
             this->doc->lock();
             this->doc->clearDocument();
@@ -2097,6 +2143,38 @@ auto Control::loadPdf(const fs::path& filepath, int scrollToPage) -> bool {
     fileLoaded(scrollToPage);
     return an;
 }
+
+
+// auto Control::loadPdf(const fs::path& filepath, int scrollToPage) -> bool {
+//     LoadHandler loadHandler;
+
+//     if (settings->isAutoloadPdfXoj()) {
+//         Document* tmp;
+//         const std::vector<std::string> exts = {".xopp", ".xoj", ".pdf.xopp", ".pdf.xoj"};
+//         for (const std::string& ext: exts) {
+//             fs::path f = filepath;
+//             Util::clearExtensions(f, ".pdf");
+//             f += ext;
+//             tmp = loadHandler.loadDocument(f);
+//             if (tmp)
+//                 break;
+//         }
+
+//         if (tmp) {
+//             this->doc->lock();
+//             this->doc->clearDocument();
+//             *this->doc = *tmp;
+//             this->doc->unlock();
+
+//             fileLoaded(scrollToPage);
+//             return true;
+//         }
+//     }
+
+//     bool an = annotatePdf(filepath, false, false);
+//     fileLoaded(scrollToPage);
+//     return an;
+// }
 
 auto Control::loadXoptTemplate(fs::path const& filepath) -> bool {
     auto contents = Util::readString(filepath);
