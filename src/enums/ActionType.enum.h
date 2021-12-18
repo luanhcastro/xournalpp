@@ -29,7 +29,6 @@ enum ActionType {
     // Menu file
     ACTION_NEW = 100,
     ACTION_OPEN,
-    ACTION_OPEN_AUTO,
     ACTION_ANNOTATE_PDF,
     ACTION_SAVE,
     ACTION_SAVE_AS,

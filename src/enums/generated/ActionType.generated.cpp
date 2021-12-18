@@ -28,10 +28,6 @@ auto ActionType_fromString(const string& value) -> ActionType {
         return ACTION_OPEN;
     }
 
-    if (value == "ACTION_OPEN_AUTO") {
-        return ACTION_OPEN_AUTO;
-    }
-
     if (value == "ACTION_ANNOTATE_PDF") {
         return ACTION_ANNOTATE_PDF;
     }
@@ -628,10 +624,6 @@ auto ActionType_toString(ActionType value) -> string {
 
     if (value == ACTION_OPEN) {
         return "ACTION_OPEN";
-    }
-
-    if (value == ACTION_OPEN_AUTO) {
-        return "ACTION_OPEN_AUTO";
     }
 
     if (value == ACTION_ANNOTATE_PDF) {
